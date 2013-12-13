@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  * 
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *	 http://www.apache.org/licenses/LICENSE-2.0
  * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -326,12 +326,10 @@ public class Utils {
 			unmapped.setInferredInsertSize(0);
 		}
 
-		boolean firstIsFirst = rec1.getAlignmentStart() < rec2.getAlignmentStart();
-		int insertSize = firstIsFirst ? SamPairUtil.computeInsertSize(rec1, rec2) : SamPairUtil.computeInsertSize(rec2,
-				rec1);
+		int insertSize = SamPairUtil.computeInsertSize(rec1, rec2);
 
-		rec1.setInferredInsertSize(firstIsFirst ? insertSize : -insertSize);
-		rec2.setInferredInsertSize(firstIsFirst ? -insertSize : insertSize);
+		rec1.setInferredInsertSize(insertSize);
+		rec2.setInferredInsertSize(-insertSize);
 
 	}
 
@@ -347,32 +345,13 @@ public class Utils {
 			return 0;
 		}
 
-		final int right = Math.max(Math.max(firstEnd.alignmentStart, firstEnd.getAlignmentEnd()),
-				Math.max(secondEnd.alignmentStart, secondEnd.getAlignmentEnd()));
-		final int left = Math.min(Math.min(firstEnd.alignmentStart, firstEnd.getAlignmentEnd()),
-				Math.min(secondEnd.alignmentStart, secondEnd.getAlignmentEnd()));
-		final int tlen = right - left + 1;
-
-		if (firstEnd.alignmentStart == left) {
-			if (firstEnd.getAlignmentEnd() != right)
-				firstEnd.templateSize = tlen;
-			else if (firstEnd.isFirstSegment())
-				firstEnd.templateSize = tlen;
-			else
-				firstEnd.templateSize = -tlen;
-		} else {
-			firstEnd.templateSize = -tlen;
-		}
-		if (secondEnd.alignmentStart == left) {
-			if (secondEnd.getAlignmentEnd() != right)
-				secondEnd.templateSize = tlen;
-			else if (secondEnd.isFirstSegment())
-				secondEnd.templateSize = tlen;
-			else
-				secondEnd.templateSize = -tlen;
-		} else {
-			secondEnd.templateSize = -tlen;
-		}
+		final int firstEnd5PrimePosition = firstEnd.isNegativeStrand()? firstEnd.getAlignmentEnd(): firstEnd.alignmentStart;
+		final int secondEnd5PrimePosition = secondEnd.isNegativeStrand()? secondEnd.getAlignmentEnd(): secondEnd.alignmentStart;
+		final int adjustment = (secondEnd5PrimePosition >= firstEnd5PrimePosition) ? +1 : -1;
+		final int tlen =  secondEnd5PrimePosition - firstEnd5PrimePosition + adjustment;
+		
+		firstEnd.templateSize = tlen;
+		secondEnd.templateSize = -tlen;
 
 		return tlen;
 	}
